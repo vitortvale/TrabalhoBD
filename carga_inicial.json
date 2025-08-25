@@ -1,0 +1,166 @@
+{
+  "Universidade": [
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "nome": "Universidade Federal de Juiz de Fora",
+      "departamentos": [
+        {
+          "id": "22222222-2222-2222-2222-222222222222",
+          "nome": "Departamento de Ciência da Computação",
+          "ativo": true,
+          "cursos": [
+            {
+              "id": "33333333-3333-3333-3333-333333333333",
+              "nome": "Bacharelado em Ciência da Computação",
+              "disciplinas": [
+                {
+                  "id": "44444444-4444-4444-4444-444444444444",
+                  "nome": "Banco de Dados I",
+                  "codigo": "INF1001",
+                  "carga_horaria": 60
+                },
+                {
+                  "id": "44444444-4444-4444-4444-444444444445",
+                  "nome": "Estruturas de Dados",
+                  "codigo": "INF1002",
+                  "carga_horaria": 60
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "22222222-2222-2222-2222-222222222223",
+          "nome": "Departamento de Engenharia Elétrica",
+          "ativo": true,
+          "cursos": [
+            {
+              "id": "33333333-3333-3333-3333-333333333334",
+              "nome": "Engenharia Elétrica",
+              "disciplinas": [
+                {
+                  "id": "44444444-4444-4444-4444-444444444446",
+                  "nome": "Circuitos Elétricos",
+                  "codigo": "ELE2001",
+                  "carga_horaria": 60
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Professores": [
+    {
+      "id": "55555555-5555-5555-5555-555555555555",
+      "nome": "Dr. Carlos Almeida",
+      "email": "carlos.almeida@ufjf.edu.br"
+    },
+    {
+      "id": "55555555-5555-5555-5555-555555555556",
+      "nome": "Dra. Fernanda Souza",
+      "email": "fernanda.souza@ufjf.edu.br"
+    }
+  ],
+  "Alunos": [
+    {
+      "id": "66666666-6666-6666-6666-666666666666",
+      "nome": "João Silva",
+      "matricula": "20250001",
+      "email": "joao.silva@estudante.ufjf.br"
+    },
+    {
+      "id": "66666666-6666-6666-6666-666666666667",
+      "nome": "Maria Oliveira",
+      "matricula": "20250002",
+      "email": "maria.oliveira@estudante.ufjf.br"
+    },
+    {
+      "id": "66666666-6666-6666-6666-666666666668",
+      "nome": "Pedro Santos",
+      "matricula": "20250003",
+      "email": "pedro.santos@estudante.ufjf.br"
+    }
+  ],
+  "PeriodosLetivos": [
+    {
+      "id": "77777777-7777-7777-7777-777777777777",
+      "codigo": "2025.1",
+      "inicio": "2025-03-01",
+      "fim": "2025-07-15"
+    }
+  ],
+  "Turmas": [
+    {
+      "id": "88888888-8888-8888-8888-888888888888",
+      "codigo": "INF1001-T01",
+      "disciplina_id": "44444444-4444-4444-4444-444444444444",
+      "professor_id": "55555555-5555-5555-5555-555555555555",
+      "periodo_letivo_id": "77777777-7777-7777-7777-777777777777"
+    },
+    {
+      "id": "88888888-8888-8888-8888-888888888889",
+      "codigo": "INF1002-T01",
+      "disciplina_id": "44444444-4444-4444-4444-444444444445",
+      "professor_id": "55555555-5555-5555-5555-555555555556",
+      "periodo_letivo_id": "77777777-7777-7777-7777-777777777777"
+    }
+  ],
+  "Matriculas": [
+    {
+      "id": "99999999-9999-9999-9999-999999999991",
+      "aluno_id": "66666666-6666-6666-6666-666666666666",
+      "turma_id": "88888888-8888-8888-8888-888888888888",
+      "data_matricula": "2025-02-20"
+    },
+    {
+      "id": "99999999-9999-9999-9999-999999999992",
+      "aluno_id": "66666666-6666-6666-6666-666666666667",
+      "turma_id": "88888888-8888-8888-8888-888888888888",
+      "data_matricula": "2025-02-20"
+    },
+    {
+      "id": "99999999-9999-9999-9999-999999999993",
+      "aluno_id": "66666666-6666-6666-6666-666666666668",
+      "turma_id": "88888888-8888-8888-8888-888888888889",
+      "data_matricula": "2025-02-21"
+    }
+  ],
+  "RegistrosFrequencia": [
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+      "matricula_id": "99999999-9999-9999-9999-999999999991",
+      "data_aula": "2025-03-05",
+      "status": "Presente"
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2",
+      "matricula_id": "99999999-9999-9999-9999-999999999992",
+      "data_aula": "2025-03-05",
+      "status": "Faltou"
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3",
+      "matricula_id": "99999999-9999-9999-9999-999999999993",
+      "data_aula": "2025-03-06",
+      "status": "Faltou"
+    }
+  ],
+  "JustificativasFalta": [
+    {
+      "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1",
+      "registro_frequencia_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2",
+      "motivo": "Estava doente, com atestado médico",
+      "arquivo_path": "/uploads/justificativas/atestado_maria.pdf",
+      "status": "Pendente"
+    },
+    {
+      "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2",
+      "registro_frequencia_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3",
+      "motivo": "Problema de transporte público",
+      "arquivo_path": null,
+      "status": "Pendente"
+    }
+  ]
+}

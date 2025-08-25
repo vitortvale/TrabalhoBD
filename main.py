@@ -1,136 +1,112 @@
+import json
 import psycopg2
-import pandas as pd
-import connect
-from sqlalchemy import create_engine, text
 
-uri = f"postgres+psycopg2://{connect.user}:{connect:pwd}@{connect.host}:5432/{connect.db}"
-
-engine = create_engine(uri)
-
-conn = engine.connect()
-
-
-query1 = """
-SELECT
-    u.nome_completo AS nome_aluno,
-    a.matricula,
-    rf.status
-FROM
-    Matricula m
-JOIN
-    Aluno a ON m.aluno_id = a.usuario_id
-JOIN
-    Usuario u ON a.usuario_id = u.id
-LEFT JOIN
-    RegistroFrequencia rf ON m.id = rf.matricula_id AND rf.data_aula = :data_aula
-WHERE
-    m.turma_id = :turma_id
-ORDER BY
-    u.nome_completo;
-"""
-
-query2 = """
--- Parâmetros: :turma_id (UUID da turma), :data_aula (Data da aula no formato 'YYYY-MM-DD')
-WITH FrequenciaPorDisciplina AS (
-    SELECT
-        d.nome AS disciplina,
-        t.codigo AS turma,
-        p.nome_completo AS professor,
-        COUNT(rf.id) AS total_aulas_registradas,
-        COUNT(rf.id) FILTER (WHERE rf.status = 'Faltou') AS total_faltas
-    FROM
-        Matricula m
-    JOIN
-        Aluno a ON m.aluno_id = a.usuario_id
-    JOIN
-        Turma t ON m.turma_id = t.id
-    JOIN
-        Disciplina d ON t.disciplina_id = d.id
-    JOIN
-        Professor prof_spec ON t.professor_id = prof_spec.usuario_id
-    JOIN
-        Usuario p ON prof_spec.usuario_id = p.id
-    LEFT JOIN
-        RegistroFrequencia rf ON m.id = rf.matricula_id
-    WHERE
-        a.usuario_id = :aluno_usuario_id
-    GROUP BY
-        d.nome, t.codigo, p.nome_completo
-)
-SELECT
-    disciplina,
-    turma,
-    professor,
-    total_aulas_registradas,
-    total_faltas,
-    -- Calcula o percentual de frequência, tratando a divisão por zero
-    CASE
-        WHEN total_aulas_registradas > 0 THEN
-            ROUND(((total_aulas_registradas - total_faltas)::DECIMAL / total_aulas_registradas) * 100, 2)
-        ELSE
-            100.00
-    END AS percentual_frequencia
-FROM
-    FrequenciaPorDisciplina
-ORDER BY
-    disciplina;
-"""
-
-query3 = """
--- Parâmetro: :depto_id (UUID do departamento)
-SELECT
-    d.nome AS disciplina,
-    t.codigo AS turma,
-    p.nome_completo AS professor,
-    COUNT(DISTINCT m.aluno_id) AS total_alunos,
-    COUNT(rf.id) AS total_lancamentos,
-    -- Calcula a taxa de ausência média da turma
-    CASE
-        WHEN COUNT(rf.id) > 0 THEN
-            ROUND((COUNT(rf.id) FILTER (WHERE rf.status = 'Faltou'))::DECIMAL / COUNT(rf.id) * 100, 2)
-        ELSE
-            0.00
-    END AS taxa_de_ausencia_percentual
-FROM
-    Turma t
-JOIN
-    Disciplina d ON t.disciplina_id = d.id
-JOIN
-    Curso c ON d.curso_id = c.id
-JOIN
-    Professor prof_spec ON t.professor_id = prof_spec.usuario_id
-JOIN
-    Usuario p ON prof_spec.usuario_id = p.id
-JOIN
-    Matricula m ON t.id = m.turma_id
-LEFT JOIN
-    RegistroFrequencia rf ON m.id = rf.matricula_id
-WHERE
-    c.departamento_id = :depto_id
-GROUP BY
-    d.nome, t.codigo, p.nome_completo
-ORDER BY
-    taxa_de_ausencia_percentual DESC, disciplina;
-"""
-
-params1 = {
-    'turma_id': '1', 
-    'data_aula': '2025-03-18'   
+# Configuração do banco
+DB_CONFIG = {
+    "dbname": "trab",
+    "user": "postgres",
+    "password": "newpassword",
+    "host": "localhost",
+    "port": 5432
 }
 
-params2 = {
-    'turma_id': '1',
-    'data_aula': '2025-03-18'
-}
+def inserir_dados():
+    # Lê o arquivo JSON
+    with open("carga_inicial.json", "r", encoding="utf-8") as f:
+        dados = json.load(f)
 
-params3 = {
-    "depto_id": '1'
-}
-df1 = pd.read_sql(sql=text(query1), con=conn, params=params1)
-df2 = pd.read_sql(sql=text(query2), con=conn, params=params2)
-df3 = pd.read_sql(sql=text(query3), con=conn, params=params3)
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
 
-print(df1.head())
-print(df2.head())
-print(df3.head())
+    try:
+        # --- Universidade ---
+        for u in dados["Universidade"]:
+            cur.execute(
+                "INSERT INTO Universidade (id, nome) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                (u["id"], u["nome"])
+            )
 
+            # --- Departamentos ---
+            for d in u["departamentos"]:
+                cur.execute(
+                    "INSERT INTO Departamento (id, nome, ativo, universidade_id) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING",
+                    (d["id"], d["nome"], d["ativo"], u["id"])
+                )
+
+                # --- Cursos ---
+                for c in d["cursos"]:
+                    cur.execute(
+                        "INSERT INTO Curso (id, nome, departamento_id) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
+                        (c["id"], c["nome"], d["id"])
+                    )
+
+                    # --- Disciplinas ---
+                    for disc in c["disciplinas"]:
+                        cur.execute(
+                            "INSERT INTO Disciplina (id, nome, codigo, carga_horaria, curso_id) VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING",
+                            (disc["id"], disc["nome"], disc["codigo"], disc["carga_horaria"], c["id"])
+                        )
+
+        # --- Professores ---
+        for p in dados["Professores"]:
+            cur.execute(
+                "INSERT INTO Professor (id, nome, email) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
+                (p["id"], p["nome"], p["email"])
+            )
+
+        # --- Alunos ---
+        for a in dados["Alunos"]:
+            cur.execute(
+                "INSERT INTO Aluno (id, nome, matricula, email) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING",
+                (a["id"], a["nome"], a["matricula"], a["email"])
+            )
+
+        # --- Período Letivo ---
+        for pl in dados["PeriodosLetivos"]:
+            cur.execute(
+                "INSERT INTO PeriodoLetivo (id, codigo, inicio, fim) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING",
+                (pl["id"], pl["codigo"], pl["inicio"], pl["fim"])
+            )
+
+        # --- Turmas ---
+        for t in dados["Turmas"]:
+            cur.execute(
+                "INSERT INTO Turma (id, codigo, disciplina_id, professor_id, periodo_letivo_id) VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING",
+                (t["id"], t["codigo"], t["disciplina_id"], t["professor_id"], t["periodo_letivo_id"])
+            )
+
+        # --- Matrículas ---
+        for m in dados["Matriculas"]:
+            cur.execute(
+                "INSERT INTO Matricula (id, aluno_id, turma_id, data_matricula) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING",
+                (m["id"], m["aluno_id"], m["turma_id"], m["data_matricula"])
+            )
+
+        # --- Registro de Frequência ---
+        for rf in dados["RegistrosFrequencia"]:
+            cur.execute(
+                "INSERT INTO RegistroFrequencia (id, matricula_id, data_aula, status) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING",
+                (rf["id"], rf["matricula_id"], rf["data_aula"], rf["status"])
+            )
+
+        # --- Justificativas de Falta ---
+        for jf in dados["JustificativasFalta"]:
+            cur.execute(
+                "INSERT INTO JustificativaFalta (id, registro_frequencia_id, motivo, arquivo_path, status) VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING",
+                (jf["id"], jf["registro_frequencia_id"], jf["motivo"], jf["arquivo_path"], jf["status"])
+            )
+
+        conn.commit()
+        print("✅ Dados inseridos com sucesso!")
+
+    except Exception as e:
+        conn.rollback()
+        print("❌ Erro ao inserir dados:", e)
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+if __name__ == "__main__":
+    inserir_dados()
