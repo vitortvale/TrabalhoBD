@@ -87,177 +87,61 @@ CREATE TABLE JustificativaFalta (
 
 -- SCRIPT DE CARGA DE DADOS PARA O SISTEMA SGPA
 -- OBS: Este script deve ser executado em sua totalidade.
-
-DO $$
-DECLARE
-    -- Variáveis para armazenar os IDs gerados
-    v_universidade_id UUID;
-    v_dcc_id UUID; -- Depto de Ciência da Computação
-    v_depto_eng_id UUID;
-    v_curso_cc_id UUID; -- Curso de Ciência da Computação
-    v_curso_si_id UUID;
-    v_curso_es_id UUID;
-    v_disc_bd_id UUID; -- Disciplina de Banco de Dados
-    v_disc_aed_id UUID;
-    v_disc_es_id UUID;
-    v_disc_rc_id UUID;
-    v_periodo_id UUID;
-    
-    -- IDs de Usuários
-    v_admin_id UUID;
-    v_chefe_dpto_id UUID;
-    v_prof_maria_id UUID;
-    v_prof_carlos_id UUID;
-    v_aluno_joao_id UUID;
-    v_aluno_ana_id UUID;
-    v_aluno_bruno_id UUID;
-    v_aluno_carla_id UUID;
-
-    -- IDs de Turmas
-    v_turma_bd_id UUID;
-    v_turma_aed_id UUID;
-    v_turma_es_id UUID;
-
-    -- IDs de Matrículas
-    v_mat_joao_bd_id UUID;
-    v_mat_ana_bd_id UUID;
-    v_mat_bruno_aed_id UUID;
-    v_mat_carla_aed_id UUID;
-    v_mat_joao_es_id UUID;
-    v_mat_carla_es_id UUID;
-
-    -- IDs de Frequência
-    v_falta_joao_bd_id UUID;
-    v_falta_bruno_aed_id UUID;
-
-BEGIN
-
 -- 1. Carga da Estrutura Acadêmica
 -- ===============================
+-- Universidade
+INSERT INTO Universidade (id, nome) VALUES
+    ('11111111-1111-1111-1111-111111111111', 'Universidade Federal de Juiz de Fora');
 
-INSERT INTO Universidade (nome) VALUES ('Universidade Federal de Juiz de Fora') RETURNING id INTO v_universidade_id;
+-- Departamentos
+INSERT INTO Departamento (id, nome, ativo, universidade_id) VALUES
+    ('22222222-2222-2222-2222-222222222222', 'Departamento de Ciência da Computação', true, '11111111-1111-1111-1111-111111111111'),
+    ('22222222-2222-2222-2222-222222222223', 'Departamento de Engenharia Elétrica', true, '11111111-1111-1111-1111-111111111111');
 
-INSERT INTO Departamento (nome, universidade_id) VALUES 
-    ('Departamento de Ciência da Computação', v_universidade_id),
-    ('Departamento de Engenharia', v_universidade_id)
-RETURNING id, id INTO v_dcc_id, v_depto_eng_id; -- Armazena apenas o primeiro ID em v_dcc_id
+-- Cursos
+INSERT INTO Curso (id, nome, departamento_id) VALUES
+    ('33333333-3333-3333-3333-333333333333', 'Bacharelado em Ciência da Computação', '22222222-2222-2222-2222-222222222222'),
+    ('33333333-3333-3333-3333-333333333334', 'Engenharia Elétrica', '22222222-2222-2222-2222-222222222223');
 
--- Ajuste para pegar o segundo ID para o depto de engenharia (uma limitação do RETURNING simples)
-SELECT id INTO v_depto_eng_id FROM Departamento WHERE nome = 'Departamento de Engenharia';
+-- Disciplinas
+INSERT INTO Disciplina (id, nome, codigo, carga_horaria, curso_id) VALUES
+    ('44444444-4444-4444-4444-444444444444', 'Banco de Dados I', 'INF1001', 60, '33333333-3333-3333-3333-333333333333'),
+    ('44444444-4444-4444-4444-444444444445', 'Estruturas de Dados', 'INF1002', 60, '33333333-3333-3333-3333-333333333333'),
+    ('44444444-4444-4444-4444-444444444446', 'Circuitos Elétricos', 'ELE2001', 60, '33333333-3333-3333-3333-333333333334');
 
-INSERT INTO Curso (nome, departamento_id) VALUES
-    ('Ciência da Computação', v_dcc_id),
-    ('Sistemas de Informação', v_dcc_id),
-    ('Engenharia de Software', v_dcc_id)
-RETURNING id, id, id INTO v_curso_cc_id, v_curso_si_id, v_curso_es_id;
-SELECT id INTO v_curso_si_id FROM Curso WHERE nome = 'Sistemas de Informação';
-SELECT id INTO v_curso_es_id FROM Curso WHERE nome = 'Engenharia de Software';
+-- Professores
+INSERT INTO Professor (id, nome, email) VALUES
+    ('55555555-5555-5555-5555-555555555555', 'Dr. Carlos Almeida', 'carlos.almeida@ufjf.edu.br'),
+    ('55555555-5555-5555-5555-555555555556', 'Dra. Fernanda Souza', 'fernanda.souza@ufjf.edu.br');
 
-INSERT INTO Disciplina (nome, codigo, carga_horaria, curso_id) VALUES
-    ('Banco de Dados', 'DCC060', 60, v_curso_cc_id),
-    ('Algoritmos e Estruturas de Dados', 'DCC007', 90, v_curso_cc_id),
-    ('Engenharia de Software I', 'DCC061', 60, v_curso_es_id),
-    ('Redes de Computadores', 'DCC062', 60, v_curso_cc_id)
-RETURNING id, id, id, id INTO v_disc_bd_id, v_disc_aed_id, v_disc_es_id, v_disc_rc_id;
-SELECT id INTO v_disc_aed_id FROM Disciplina WHERE codigo = 'DCC007';
-SELECT id INTO v_disc_es_id FROM Disciplina WHERE codigo = 'DCC061';
-SELECT id INTO v_disc_rc_id FROM Disciplina WHERE codigo = 'DCC062';
+-- Alunos
+INSERT INTO Aluno (id, nome, matricula, email) VALUES
+    ('66666666-6666-6666-6666-666666666666', 'João Silva', '20250001', 'joao.silva@estudante.ufjf.br'),
+    ('66666666-6666-6666-6666-666666666667', 'Maria Oliveira', '20250002', 'maria.oliveira@estudante.ufjf.br'),
+    ('66666666-6666-6666-6666-666666666668', 'Pedro Santos', '20250003', 'pedro.santos@estudante.ufjf.br');
 
--- 2. Carga de Período Letivo
--- =========================
-INSERT INTO PeriodoLetivo (codigo, inicio, fim) VALUES ('2025.1', '2025-03-03', '2025-07-15') RETURNING id INTO v_periodo_id;
+-- Período Letivo
+INSERT INTO PeriodoLetivo (id, codigo, inicio, fim) VALUES
+    ('77777777-7777-7777-7777-777777777777', '2025.1', '2025-03-01', '2025-07-15');
 
--- 3. Carga de Usuários e Perfis
--- =============================
--- Senha para todos: 'senha123' (hash gerado para 'senha123' com bcrypt)
-INSERT INTO Usuario (nome_completo, email, senha_hash, perfil, ativo) VALUES
-    ('Admin do Sistema', 'admin@ufjf.br', '$2a$10$vKiR9w23e.y3gJ4s2qjNPe/d8dBlh6b7iWz6V4TMgD7dJ5.qG2f/a', 'ADMINISTRADOR', true),
-    ('Roberto Diretor', 'roberto.chefe@ufjf.br', '$2a$10$vKiR9w23e.y3gJ4s2qjNPe/d8dBlh6b7iWz6V4TMgD7dJ5.qG2f/a', 'CHEFE_DEPARTAMENTO', true),
-    ('Prof. Maria Santos', 'maria.santos@ufjf.br', '$2a$10$vKiR9w23e.y3gJ4s2qjNPe/d8dBlh6b7iWz6V4TMgD7dJ5.qG2f/a', 'PROFESSOR', true),
-    ('Prof. Carlos Lima', 'carlos.lima@ufjf.br', '$2a$10$vKiR9w23e.y3gJ4s2qjNPe/d8dBlh6b7iWz6V4TMgD7dJ5.qG2f/a', 'PROFESSOR', true),
-    ('João da Silva', 'joao.silva@aluno.ufjf.br', '$2a$10$vKiR9w23e.y3gJ4s2qjNPe/d8dBlh6b7iWz6V4TMgD7dJ5.qG2f/a', 'ALUNO', true),
-    ('Ana Pereira', 'ana.pereira@aluno.ufjf.br', '$2a$10$vKiR9w23e.y3gJ4s2qjNPe/d8dBlh6b7iWz6V4TMgD7dJ5.qG2f/a', 'ALUNO', true),
-    ('Bruno Costa', 'bruno.costa@aluno.ufjf.br', '$2a$10$vKiR9w23e.y3gJ4s2qjNPe/d8dBlh6b7iWz6V4TMgD7dJ5.qG2f/a', 'ALUNO', true),
-    ('Carla Oliveira', 'carla.oliveira@aluno.ufjf.br', '$2a$10$vKiR9w23e.y3gJ4s2qjNPe/d8dBlh6b7iWz6V4TMgD7dJ5.qG2f/a', 'ALUNO', true)
-RETURNING id, id, id, id, id, id, id, id INTO v_admin_id, v_chefe_dpto_id, v_prof_maria_id, v_prof_carlos_id, v_aluno_joao_id, v_aluno_ana_id, v_aluno_bruno_id, v_aluno_carla_id;
+-- Turmas
+INSERT INTO Turma (id, codigo, disciplina_id, professor_id, periodo_letivo_id) VALUES
+    ('88888888-8888-8888-8888-888888888888', 'INF1001-T01', '44444444-4444-4444-4444-444444444444', '55555555-5555-5555-5555-555555555555', '77777777-7777-7777-7777-777777777777'),
+    ('88888888-8888-8888-8888-888888888889', 'INF1002-T01', '44444444-4444-4444-4444-444444444445', '55555555-5555-5555-5555-555555555556', '77777777-7777-7777-7777-777777777777');
 
--- Seleções para garantir que as variáveis corretas sejam atribuídas
-SELECT id INTO v_chefe_dpto_id FROM Usuario WHERE email = 'roberto.chefe@ufjf.br';
-SELECT id INTO v_prof_maria_id FROM Usuario WHERE email = 'maria.santos@ufjf.br';
-SELECT id INTO v_prof_carlos_id FROM Usuario WHERE email = 'carlos.lima@ufjf.br';
-SELECT id INTO v_aluno_joao_id FROM Usuario WHERE email = 'joao.silva@aluno.ufjf.br';
-SELECT id INTO v_aluno_ana_id FROM Usuario WHERE email = 'ana.pereira@aluno.ufjf.br';
-SELECT id INTO v_aluno_bruno_id FROM Usuario WHERE email = 'bruno.costa@aluno.ufjf.br';
-SELECT id INTO v_aluno_carla_id FROM Usuario WHERE email = 'carla.oliveira@aluno.ufjf.br';
+-- Matrículas
+INSERT INTO Matricula (id, aluno_id, turma_id, data_matricula) VALUES
+    ('99999999-9999-9999-9999-999999999991', '66666666-6666-6666-6666-666666666666', '88888888-8888-8888-8888-888888888888', '2025-02-20'),
+    ('99999999-9999-9999-9999-999999999992', '66666666-6666-6666-6666-666666666667', '88888888-8888-8888-8888-888888888888', '2025-02-20'),
+    ('99999999-9999-9999-9999-999999999993', '66666666-6666-6666-6666-666666666668', '88888888-8888-8888-8888-888888888889', '2025-02-21');
 
--- Especialização dos Professores
-INSERT INTO Professor (usuario_id, departamento_id) VALUES
-    (v_prof_maria_id, v_dcc_id),
-    (v_prof_carlos_id, v_dcc_id);
+-- Registro de Frequência
+INSERT INTO RegistroFrequencia (id, matricula_id, data_aula, status, data_lancamento) VALUES
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', '99999999-9999-9999-9999-999999999991', '2025-03-05', 'Presente', NOW()),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', '99999999-9999-9999-9999-999999999992', '2025-03-05', 'Faltou', NOW()),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', '99999999-9999-9999-9999-999999999993', '2025-03-06', 'Faltou', NOW());
 
--- Especialização dos Alunos
-INSERT INTO Aluno (usuario_id, matricula, curso_id) VALUES
-    (v_aluno_joao_id, '2021001', v_curso_cc_id),
-    (v_aluno_ana_id, '2021002', v_curso_si_id),
-    (v_aluno_bruno_id, '2021003', v_curso_cc_id),
-    (v_aluno_carla_id, '2021004', v_curso_es_id);
-
--- 4. Carga de Turmas
--- ===================
-INSERT INTO Turma (codigo, dias_semana, horario, disciplina_id, professor_id, periodo_letivo_id) VALUES
-    ('T1', 'Terça, Quinta', '10:00 - 12:00', v_disc_bd_id, v_prof_maria_id, v_periodo_id),
-    ('T1', 'Segunda, Quarta, Sexta', '08:00 - 10:00', v_disc_aed_id, v_prof_carlos_id, v_periodo_id),
-    ('T1', 'Segunda, Quarta', '14:00 - 16:00', v_disc_es_id, v_prof_maria_id, v_periodo_id)
-RETURNING id, id, id INTO v_turma_bd_id, v_turma_aed_id, v_turma_es_id;
-
-SELECT id INTO v_turma_aed_id FROM Turma WHERE disciplina_id = v_disc_aed_id;
-SELECT id INTO v_turma_es_id FROM Turma WHERE disciplina_id = v_disc_es_id;
-
--- 5. Carga de Matrículas
--- ======================
-INSERT INTO Matricula (aluno_id, turma_id, data_matricula) VALUES
-    (v_aluno_joao_id, v_turma_bd_id, '2025-03-01'),
-    (v_aluno_ana_id, v_turma_bd_id, '2025-03-01'),
-    (v_aluno_bruno_id, v_turma_aed_id, '2025-03-01'),
-    (v_aluno_carla_id, v_turma_aed_id, '2025-03-01'),
-    (v_aluno_joao_id, v_turma_es_id, '2025-03-02'),
-    (v_aluno_carla_id, v_turma_es_id, '2025-03-02')
-RETURNING id, id, id, id, id, id INTO v_mat_joao_bd_id, v_mat_ana_bd_id, v_mat_bruno_aed_id, v_mat_carla_aed_id, v_mat_joao_es_id, v_mat_carla_es_id;
-
--- Seleções para garantir as variáveis corretas
-SELECT id INTO v_mat_ana_bd_id FROM Matricula WHERE aluno_id = v_aluno_ana_id AND turma_id = v_turma_bd_id;
-SELECT id INTO v_mat_bruno_aed_id FROM Matricula WHERE aluno_id = v_aluno_bruno_id AND turma_id = v_turma_aed_id;
-SELECT id INTO v_mat_carla_aed_id FROM Matricula WHERE aluno_id = v_aluno_carla_id AND turma_id = v_turma_aed_id;
-SELECT id INTO v_mat_joao_es_id FROM Matricula WHERE aluno_id = v_aluno_joao_id AND turma_id = v_turma_es_id;
-SELECT id INTO v_mat_carla_es_id FROM Matricula WHERE aluno_id = v_aluno_carla_id AND turma_id = v_turma_es_id;
-
-
--- 6. Carga de Frequências
--- =========================
--- Aluno João na turma de Banco de Dados
-INSERT INTO RegistroFrequencia (matricula_id, data_aula, status) VALUES
-    (v_mat_joao_bd_id, '2025-03-11', 'Presente'),
-    (v_mat_joao_bd_id, '2025-03-13', 'Presente'),
-    (v_mat_joao_bd_id, '2025-03-18', 'Faltou');
-SELECT id INTO v_falta_joao_bd_id FROM RegistroFrequencia WHERE matricula_id = v_mat_joao_bd_id AND data_aula = '2025-03-18';
-
--- Aluno Bruno na turma de Algoritmos
-INSERT INTO RegistroFrequencia (matricula_id, data_aula, status) VALUES
-    (v_mat_bruno_aed_id, '2025-03-10', 'Presente'),
-    (v_mat_bruno_aed_id, '2025-03-12', 'Presente'),
-    (v_mat_bruno_aed_id, '2025-03-14', 'Faltou'),
-    (v_mat_bruno_aed_id, '2025-03-17', 'Faltou');
-SELECT id INTO v_falta_bruno_aed_id FROM RegistroFrequencia WHERE matricula_id = v_mat_bruno_aed_id AND data_aula = '2025-03-17';
-
--- Aluna Ana na turma de Banco de Dados (só presenças)
-INSERT INTO RegistroFrequencia (matricula_id, data_aula, status) VALUES
-    (v_mat_ana_bd_id, '2025-03-11', 'Presente'),
-    (v_mat_ana_bd_id, '2025-03-13', 'Presente');
-
--- 7. Carga de Justificativas
--- ==========================
-INSERT INTO JustificativaFalta (registro_frequencia_id, motivo, arquivo_path, status) VALUES
-    (v_falta_joao_bd_id, 'Consulta médica', '/anexos/atestado_joao.pdf', 'Pendente'),
-    (v_falta_bruno_aed_id, 'Problema familiar', '/anexos/declaracao_bruno.pdf', 'Aprovada');
-
-END $$;
+-- Justificativa de Falta
+INSERT INTO JustificativaFalta (id, registro_frequencia_id, motivo, arquivo_path, data_envio, status) VALUES
+    ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 'Estava doente, com atestado médico', '/uploads/justificativas/atestado_maria.pdf', NOW(), 'Pendente'),
+    ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', 'Problema de transporte público', NULL, NOW(), 'Pendente');
